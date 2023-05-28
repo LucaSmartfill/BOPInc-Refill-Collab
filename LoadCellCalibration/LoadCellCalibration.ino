@@ -15,7 +15,7 @@
 #include "HX711.h"
 
 // HX711 circuit wiring
-float knownWeight = 650.0; // measured weight of jerry can, in grams
+float knownWeight = 1000.0; // measured weight of jerry can, in grams
 
 const int LOADCELL_DOUT_PIN = 34; // LOAD CELL 1
 // const int LOADCELL_DOUT_PIN = 34; // LOAD CELL 2
