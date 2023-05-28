@@ -15,13 +15,12 @@
 #include "HX711.h"
 
 // HX711 circuit wiring
-int knownWeight = 2000; // measured weight of jerry can, in grams
+float knownWeight = 650.0; // measured weight of jerry can, in grams
 
 const int LOADCELL_DOUT_PIN = 34; // LOAD CELL 1
 // const int LOADCELL_DOUT_PIN = 34; // LOAD CELL 2
 // const int LOADCELL_DOUT_PIN = 34; // LOAD CELL 3
 // const int LOADCELL_DOUT_PIN = 34; // LOAD CELL 4
-
 
 const int LOADCELL_SCK_PIN = 18;
 
@@ -49,8 +48,8 @@ void loop() {
     long reading = scale.get_units(10);
     Serial.print("Result: ");
     Serial.println(reading);
-    Serial.println("Calibration Factor: ");
-    Serial.print(reading/knownWeight * 1000);
+    Serial.print("Calibration Factor: ");
+    Serial.println((float)reading/knownWeight);
   } 
   else {
     Serial.println("HX711 not found.");
