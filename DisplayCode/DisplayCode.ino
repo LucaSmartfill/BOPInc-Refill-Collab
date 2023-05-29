@@ -983,10 +983,10 @@ void onReceive(int len) // Anwsers to Master's "transmissions"
 
    masterMessage.toCharArray(msg, len+1);
    
-   Serial.print("Master Message: ")
+   Serial.print("Master Message: ");
    Serial.println(masterMessage);
 
-   Serial.print("First char of Master Message: ")
+   Serial.print("First char of Master Message: ");
    Serial.println(msg[0]);
    
    if (masterMessage == "1")
@@ -1281,10 +1281,9 @@ void onReceive(int len) // Anwsers to Master's "transmissions"
          }
          if (TVN !=-1){
          display1.drawXBMP(0,32,ML_width, ML_height, ML);
-         display1.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[FVN]);
-         display1.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[SVN]);
-         display1.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]);
-
+         display1.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[FVN]);
+         display1.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[SVN]);
+         display1.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]); // change
          }
          display1.sendBuffer();
       }
@@ -1313,9 +1312,9 @@ void onReceive(int len) // Anwsers to Master's "transmissions"
          }
          if (TVN !=-1){
          display2.drawXBMP(0,32,ML_width, ML_height, ML);
-         display2.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[FVN]);
-         display2.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[SVN]);
-         display2.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]);
+         display2.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[FVN]);
+         display2.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[SVN]);
+         display2.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]); // change
 
          }
          display2.sendBuffer();
@@ -1345,9 +1344,9 @@ void onReceive(int len) // Anwsers to Master's "transmissions"
          }
          if (TVN !=-1){
          display3.drawXBMP(0,32,ML_width, ML_height, ML);
-         display3.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[FVN]);
-         display3.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[SVN]);
-         display3.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]);
+         display3.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[FVN]);
+         display3.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[SVN]);
+         display3.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]); // change
 
          }
          // display3.sendBuffer();
@@ -1377,9 +1376,9 @@ void onReceive(int len) // Anwsers to Master's "transmissions"
          }
          if (TVN !=-1){
          display4.drawXBMP(0,32,ML_width, ML_height, ML);
-         display4.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[FVN]);
-         display4.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[SVN]);
-         display4.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]);
+         display4.drawXBMP(ML_width,32,16, NumerialHeight, numerials_16[FVN]);
+         display4.drawXBMP(ML_width+16,32,16, NumerialHeight, numerials_16[SVN]);
+         display4.drawXBMP(ML_width+16+16,32,16, NumerialHeight, numerials_16[TVN]); // change
 
          }
          // display4.sendBuffer();
