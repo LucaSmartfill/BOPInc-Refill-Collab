@@ -46,7 +46,8 @@ const char simPIN[] = ""; // SIM card PIN (leave empty, if not defined)
  * 
  * Configure the system to connect via WiFi or GPRS here.
  */
-#define TINY_GSM_USE_WIFI false // (true = WiFi, false = GPRS)
+#define TINY_GSM_USE_WIFI true // (true = WiFi, false = GPRS)
+//#define TINY_GSM_USE_GPRS false
 
 /* Load Cell Factors
  * 

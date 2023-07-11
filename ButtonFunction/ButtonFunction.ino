@@ -103,7 +103,7 @@ int state = 0;
 int activeDispenser = 0;
 int enteredAmount = 0;
 int currentDispensedAmount = 0;
-int amountTK = 5; // entered amount in TK, default is 5
+int amountTK = 40; // entered amount in TK, default is 40
 
 /* --- Buzzer Variables --- */
 int tempo = 180;
@@ -231,8 +231,9 @@ void reset()
   activeDispenser = 0;
   state = 0;
   currentDispensedAmount = 0;
-  amountTK = 5;
+  amountTK = 40;
   activeDispenser = 0;
+  for (int i = 0; i < 4; i++) turnOffMotor(i+1);
 }
 
 /*
@@ -306,8 +307,11 @@ void printReceipt(int dispenserIndex, String choice, int amountDispensedTK, int 
 
   int price = amountDispensedTK;
   int savings = price * 0.1;
-  int volDispensedML = (int)(getVolume(dispenserIndex, price));
-  int volEnteredML = (int)(getVolume(dispenserIndex, enteredAmountTK));
+  
+  //int volDispensedML = (int)(getVolume(dispenserIndex, price));
+  //int volEnteredML = (int)(getVolume(dispenserIndex, enteredAmountTK));
+  int volDispensedML = ceil(getVolume(dispenserIndex, price));
+  int volEnteredML = ceil(getVolume(dispenserIndex, enteredAmountTK));
   
   if (isBTConnected)
   {
@@ -539,7 +543,6 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
   static bool isMotorOn = false;
   
   bool breakout = false;
-  bool paused = false;
   
   limitSwitches.loop();
   if      (dispenserIndex == 1) dis1.loop();
@@ -561,10 +564,14 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
   int last_written_amount = -1;
   
   timerEn = false;
-
+  
   for (int i = 0; i <= enteredAmountTK; i++)
   {
-    if (breakout) break;
+    if (breakout)
+    {
+      turnOffMotor(dispenserIndex);
+      break;
+    }
     
     unsigned long previousMillis = millis();
     
@@ -577,8 +584,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
       isMotorOn = false;
 
       dispenseTimerBool = false;
-      paused = true;
-
+      
       if (!timerEn)
       {
         Serial.print("Limit Switch ADC Reading: ");
@@ -587,6 +593,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
         
         timerEn = true;
         sendtoDisplay("Push Bottle");
+        
         if (currentDispensedAmount > 0)
         {
           turnMotorReverse(dispenserIndex);
@@ -618,6 +625,8 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
       }
     }
 
+    if (breakout) break;
+    
     while (limitSwitches.isPressing(dispenserIndex - 1))
     {
       currentDispensedAmount++;
@@ -631,6 +640,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
         timerStart(dispense_timer);
         dispenseTimerBool = true;
       }
+      
       int dis_timeTaken = timerReadMilis(dispense_timer);
       
       String DisMsg = "D:";
@@ -656,12 +666,9 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
         dis_timeTaken = timerReadMilis(dispense_timer);
       }
       
-      Serial.print("Limit Switch ADC Reading: ");
-      MultiButtons::printReading(limitSwitchesPin);
-      Serial.println();
-      
-      //Serial.print(F("Dispensed 1ml. Time taken: "));
-      //Serial.println(dis_timeTaken);
+      //Serial.print("Limit Switch ADC Reading: ");
+      //MultiButtons::printReading(limitSwitchesPin);
+      //Serial.println();
 
       dispenseTimerBool = false;
       totalTimeTaken += dis_timeTaken;
@@ -676,10 +683,12 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
         sendtoDisplay("Printing");
         printReceipt(dispenserIndex, choice, currentDispensedAmount, enteredAmountTK);
         breakout = true;
+        break;
       }
-      break;
-    }
-  }
+    } // end while(limitSwitches.isPressing(dispenserIndex-1))
+    if (breakout) break;
+  } // end for
+  turnOffMotor(dispenserIndex);
   reset();
 }
 
@@ -725,6 +734,9 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
       sendtoSlave("Started:" + String(choice) + ":999:999:999:");
       sendtoDisplay(String(dispenserIndex));
 
+      // dispenser 3 (Lifebuoy Handwash) has a default value of 50 TK
+      if (dispenserIndex == 3) amountTK = 50;
+
       int amountML = ceil(getVolume(dispenserIndex, amountTK)); // calculate volume based on TK amount
       sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":"); // format message and send to display
       state = 1;
@@ -764,7 +776,7 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
           while (mb->isPressing(DOWN_BTN) && amountTK > 5)
           {
             // decrement volume amount and price
-            amountTK-=5;
+            amountTK -= 5;
             int amountML = ceil(getVolume(dispenserIndex, amountTK));
             Serial.print(F("Amount: "));
             Serial.println(amountML);
@@ -783,7 +795,7 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
           while (mb->isPressing(UP_BTN) && amountTK < amountTKMax)
           {
             // increment volume amount and price
-            amountTK+=5;    
+            amountTK += 5;    
             int amountML = ceil(getVolume(dispenserIndex, amountTK));
             Serial.print(F("Amount: "));
             Serial.println(amountML);

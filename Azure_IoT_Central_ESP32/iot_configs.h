@@ -30,7 +30,7 @@
  * 10000 - l1dg0rAhz4jf+g1M7LS07KGDyzYLJom1Eze72ICiRQ0=       (Luca's SA Test Dispenser)
  *
  * IOT_CONFIG_DEVICE_ID and IOT_CONFIG_DEVICE_KEY must
- * be defined to reflect the above informatiobn depending
+ * be defined to reflect the above information depending
  * on the machine in question.
  */
 #define IOT_CONFIG_DEVICE_ID              "00001"
