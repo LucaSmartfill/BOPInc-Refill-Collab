@@ -143,6 +143,7 @@ int     product3TKLimit = 40;
 String  product4 = "Dove Hairfall Rescue";
 String  product4Ingredients = "Water, Sodium Laureth Sulfate, Dimethiconol, Cocamidopropyl Betaine, Glyceryl stearate, Sodium Chloride, Glycol Distearate, Perfume, Carbomer, Guar Hydroxypropyltrimonium Chloride, TEA-Dodecylbenzenesulfonate, Mica, Disodium EDTA, Citric Acid, DMDM Hydantoin, Stearalkonium Bentonite, Cetrimonium Chloride, Titanium Dyoxide, Sodium Benzoate, Magnesium Nitrate, Zinc Gluconate, Climbazole, Lysine HCI, Helianthus ANNUUS (Sunflower) Seed Oil, Methylchloroisothiazolinone, Magnesium Chloride, Methylisothiazolinone, CI 15985, CI 19140";
 String  product4Cat = "Liquid Shampoo";
+
 double  product4TKPerML = 0.66667;
 double  product4MLPerTK = 1.5;
 int     product4TKLimit = 65;
@@ -233,7 +234,7 @@ void reset()
   currentDispensedAmount = 0;
   amountTK = 40;
   activeDispenser = 0;
-  for (int i = 0; i < 4; i++) turnOffMotor(i+1);
+  turnOffMotor();
 }
 
 /*
@@ -569,7 +570,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
   {
     if (breakout)
     {
-      turnOffMotor(dispenserIndex);
+      turnOffMotor();
       break;
     }
     
@@ -580,7 +581,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
       i = currentDispensedAmount;
       timerRestart(dispense_timer);
       timerStop(dispense_timer);
-      turnOffMotor(dispenserIndex);
+      turnOffMotor();
       isMotorOn = false;
 
       dispenseTimerBool = false;
@@ -597,7 +598,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
         if (currentDispensedAmount > 0)
         {
           turnMotorReverse(dispenserIndex);
-          turnOffMotor(dispenserIndex);
+          turnOffMotor();
         }
       }
       
@@ -677,7 +678,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
       {
         // 100ms in reverse to pump excess product back into tubing
         turnMotorReverse(dispenserIndex);
-        turnOffMotor(dispenserIndex);
+        turnOffMotor();
         isMotorOn = false;
 
         sendtoDisplay("Printing");
@@ -688,7 +689,7 @@ void dispense(int dispenserIndex, String choice, int enteredAmountTK,  MultiButt
     } // end while(limitSwitches.isPressing(dispenserIndex-1))
     if (breakout) break;
   } // end for
-  turnOffMotor(dispenserIndex);
+  turnOffMotor();
   reset();
 }
 
@@ -734,8 +735,8 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
       sendtoSlave("Started:" + String(choice) + ":999:999:999:");
       sendtoDisplay(String(dispenserIndex));
 
-      // dispenser 3 (Lifebuoy Handwash) has a default value of 50 TK
-      if (dispenserIndex == 3) amountTK = 50;
+      // dispenser 4 (Dove Hairfall Rescue) has a default value of 50 TK
+      if (dispenserIndex == 4) amountTK = 50;
 
       int amountML = ceil(getVolume(dispenserIndex, amountTK)); // calculate volume based on TK amount
       sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":"); // format message and send to display
@@ -887,7 +888,7 @@ void turnOnMotor(int dispenserIndex)
   digitalWrite(motor1Pin2, LOW);
 }
 
-void turnOffMotor(int dispenserIndex)
+void turnOffMotor()
 {
   analogWrite(enable1Pin, 0);
   analogWrite(enable2Pin, 0);
