@@ -41,7 +41,7 @@ double  product4TimePerML = 0.34; // CALIBRATE: time in seconds to dispense 1ml 
  * 
  * for buttons 0 to 3 respectively. 
  * 
- * Tip:
+ * Suggestion:
  * View serial output messages to identify the true ADC readings of each button, then
  * change the ADC min and max values accordingly.
  */
@@ -103,7 +103,7 @@ int state = 0;
 int activeDispenser = 0;
 int enteredAmount = 0;
 int currentDispensedAmount = 0;
-int amountTK = 40; // entered amount in TK, default is 40
+int amountIndex = 0; // entered amount in TK, default is 40
 
 /* --- Buzzer Variables --- */
 int tempo = 180;
@@ -116,6 +116,12 @@ int notes = sizeof(melody) / sizeof(melody[0]) / 2;
 int wholenote = (60000 * 4) / tempo;
 int divider = 0, noteDuration = 0;
 
+// Popular Amounts for prototype pilot, specified in Taka
+int popularAmountsTK[][3] = { {20, 35, 50},   // product1 - Sunsilk Pink
+                              {20, 35, 50},   // product2 - Sunsilk Black
+                              {20, 30, 40},   // product3 - Lifebuoy Handwash
+                              {20, 40, 60} }; // product4 - Dove Hairfall Rescue
+                        
 /* --- Product Variables --- */
 String  product1 = "Sunsilk Pink";
 String  product1Ingredients = "Water, Sodium laureth sulfate, Dimethiconol (and) TEA-dodecylbenzenesulfonate, Cocamidopropyl betaine,Sodium chloride, Perfume, Lysine Hydrochloride, Carbomer, Guar hydroxypropyltrimonium chloride, Panthenol, Hydrolyzed keratin,Yogurt powder, Sodium hydroxide, Disodium EDTA, DMDM Hydantoin, MICA and Titanium Dioxide, Citric acid, Methylchloroisothiazolinone and Methylisothiazolinone";
@@ -127,7 +133,6 @@ int     product1TKLimit = 50;
 String  product2 = "Sunsilk Black";
 String  product2Ingredients = "Water, Sodium laureth sulfate, Dimethiconol( and) TEA-dodecylbenzenesulfonate, Cocamidopropyl betaine, perfume,Sodium chloride, Carbomer, Guar hydroxypropyltrimonium chloride, Sodium hydroxide, Disodium EDTA, DMDM Hydantoin, MICA and Titanium Dioxide, Lysine Hydrochloride, panthenol, Ethylhxyl methoxyxinnamate, Hydrolyzed conchiolin protein (Pearl extract), Phyllanthus emblica (Amla) fruits extract, Argania spinosa (Argan) kernel oil, Olea europaea (Olive) fruit oil, Camellia Oleifera (Camellia) seed oil, Prunus dulcis (sweet almond) oil, Simmondsia chinensis (Jojoba) seed oil, Citric acid, Methylchloroisothiazolinone and Methylisothiazolinone, CI 77266";
 String  product2Cat = "Liquid Shampoo";
-
 double  product2TKPerML = 0.5;
 double  product2MLPerTK = 2.0;
 int     product2TKLimit = 50;
@@ -135,7 +140,6 @@ int     product2TKLimit = 50;
 String  product3 = "Lifebuoy Handwash";
 String  product3Ingredients = "Aqua, sodium laureth sulfate, Sodium Chloride, Cocamide MEA, glycol distearate, Perfume, Citric Acid, Acrylate copolymer, Sodium benzoate, Hydroxy Stearic Acid, Glycerin, Tetrasodium EDTA, Sodium Hydroxide, Stearic Acid, Niacinamide, Tocopheryl Acetate, Sodium Ascorbyl Phosphate, Terpineol, VP/VA Copolymer, Thymol, Palmitic Acid, Sodium Carbonate, Sodium Glycolate, Silver Oxide, Lauric acid, Sodium Sulphate, CI 45100";
 String  product3Cat = "Liquid Soap";
-
 double  product3TKPerML = 0.4;
 double  product3MLPerTK = 2.5;
 int     product3TKLimit = 40;
@@ -143,7 +147,6 @@ int     product3TKLimit = 40;
 String  product4 = "Dove Hairfall Rescue";
 String  product4Ingredients = "Water, Sodium Laureth Sulfate, Dimethiconol, Cocamidopropyl Betaine, Glyceryl stearate, Sodium Chloride, Glycol Distearate, Perfume, Carbomer, Guar Hydroxypropyltrimonium Chloride, TEA-Dodecylbenzenesulfonate, Mica, Disodium EDTA, Citric Acid, DMDM Hydantoin, Stearalkonium Bentonite, Cetrimonium Chloride, Titanium Dyoxide, Sodium Benzoate, Magnesium Nitrate, Zinc Gluconate, Climbazole, Lysine HCI, Helianthus ANNUUS (Sunflower) Seed Oil, Methylchloroisothiazolinone, Magnesium Chloride, Methylisothiazolinone, CI 15985, CI 19140";
 String  product4Cat = "Liquid Shampoo";
-
 double  product4TKPerML = 0.66667;
 double  product4MLPerTK = 1.5;
 int     product4TKLimit = 65;
@@ -178,12 +181,12 @@ void LimitSwitchHandler(MultiButtons *mb, int btnIndex)
   Serial.println();
 }
 
-
 /* --- UI Button Handler Functions (MultiButtons library) --- */
 void Dispenser1Handler(MultiButtons *mb, int btnIndex)
 {
   // Uncomment for debug messages
   String btnName;
+  
   if      (btnIndex == GREEN_BTN) btnName = "GREEN";
   else if (btnIndex == RED_BTN)   btnName = "RED";
   else if (btnIndex == UP_BTN)    btnName = "UP";
@@ -232,7 +235,7 @@ void reset()
   activeDispenser = 0;
   state = 0;
   currentDispensedAmount = 0;
-  amountTK = 40;
+  amountIndex = 0;
   activeDispenser = 0;
   turnOffMotor();
 }
@@ -276,9 +279,9 @@ void playSong()
 }
 
 /* 
- *  Prints a receipt for the dispense via the BlueTooth Printer.
- *  Also sends the dispense telemetry to the Comms ESP32 module 
- *  via I2C and sounds the buzzer upon completion.
+ *  Print a receipt for the dispense via the BlueTooth Printer.
+ *  Also send the dispense telemetry to the Comms ESP32 module 
+ *  via I2C and sounds the buzzer upon dispense completion.
  *  
  *  @param dispenserIndex     The index of the currently active dispenser.
  *  @param choice             The name of the chosen product.
@@ -731,15 +734,16 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
     case 0:
     {
       Serial.println(F(" (Started New Dispense)"));
+
+      sendtoSlave("Started:" + String(choice) + ":999:999:999:"); // notify comms module that dispense has started
+      sendtoDisplay(String(dispenserIndex)); // initialise display of the dispenser that was interacted with
+
+      // send the currently selected amount and its corresponding volume to the display
+      int amountTK = popularAmountsTK[dispenserIndex-1][amountIndex];
+      int amountML = ceil(getVolume(dispenserIndex, amountTK)); 
       
-      sendtoSlave("Started:" + String(choice) + ":999:999:999:");
-      sendtoDisplay(String(dispenserIndex));
-
-      // dispenser 4 (Dove Hairfall Rescue) has a default value of 50 TK
-      if (dispenserIndex == 4) amountTK = 50;
-
-      int amountML = ceil(getVolume(dispenserIndex, amountTK)); // calculate volume based on TK amount
-      sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":"); // format message and send to display
+      sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":");
+      
       state = 1;
     }
     break;
@@ -752,39 +756,42 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
       {
         case GREEN_BTN:
         {
-          if (amountTK > 4)
-          { 
-            int amountML = ceil(getVolume(dispenserIndex, amountTK));
-            sendtoSlave("Amount Chosen:" + choice + ":" + String(amountML) + ":999:" + String(amountTK) + ":");
-            sendtoDisplay("Press Green");
-            state = 2;
-            break;
-          }
+          int amountTK = popularAmountsTK[dispenserIndex-1][amountIndex];
+          int amountML = ceil(getVolume(dispenserIndex, amountTK));
+          sendtoSlave("Amount Chosen:" + choice + ":" + String(amountML) + ":999:" + String(amountTK) + ":"); // inform comms module of chosen amount
+          sendtoDisplay("Press Green"); // instruct display module to go to the "press green" screen
+          state = 2;
+          break;
         }
         break;
         
         case RED_BTN:
         {
           state = 99;
-          sendtoDisplay("Cancel");
-          sendtoSlave("Cancel Init:" + choice + ":" + String(amountTK) + ":999:999:");
+          sendtoDisplay("Cancel"); // instruct display module to go to the "cancel?" screen
+          sendtoSlave("Cancel Init:" + choice + ":" + String(popularAmountsTK[dispenserIndex-1][amountIndex]) + ":999:999:"); // inform comms module of attempted cancel
         }
         break;
   
         case DOWN_BTN:
         {
           // decrease amount
-          while (mb->isPressing(DOWN_BTN) && amountTK > 5)
+          while (mb->isPressing(DOWN_BTN) && amountIndex > 0)
           {
-            // decrement volume amount and price
-            amountTK -= 5;
+            // decrement the index of the selected popular amount
+            amountIndex--;
+
+            // update the display
+            int amountTK = popularAmountsTK[dispenserIndex-1][amountIndex];
             int amountML = ceil(getVolume(dispenserIndex, amountTK));
+            sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":");
+            
             Serial.print(F("Amount: "));
             Serial.println(amountML);
             Serial.print(F("Price: "));
             Serial.print(amountTK);
             Serial.println(" TK");
-            sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":");
+            
             delay(500);
           }
         }
@@ -793,17 +800,21 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
         // Increase Amount
         case UP_BTN:
         {
-          while (mb->isPressing(UP_BTN) && amountTK < amountTKMax)
+          while (mb->isPressing(UP_BTN) && amountIndex < sizeof(popularAmountsTK[0])/sizeof(popularAmountsTK[0][0]) - 1)
           {
-            // increment volume amount and price
-            amountTK += 5;    
+            // increment the index of the selected popular amount
+            amountIndex++;
+            
+            // update the display
+            int amountTK = popularAmountsTK[dispenserIndex-1][amountIndex];
             int amountML = ceil(getVolume(dispenserIndex, amountTK));
+            sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":");
+            
             Serial.print(F("Amount: "));
             Serial.println(amountML);
             Serial.print(F("Price: "));
             Serial.print(amountTK);
             Serial.println(" TK");
-            sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":");
             delay(500);
           }
         }
@@ -820,14 +831,14 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
       { 
         case GREEN_BTN:
         {
-          dispense(dispenserIndex, choice, amountTK, mb);
+          dispense(dispenserIndex, choice, popularAmountsTK[dispenserIndex-1][amountIndex], mb);
         }
         break;
         
         case RED_BTN:
         {
           sendtoDisplay("Cancel");
-          sendtoSlave("Cancel Init:" + choice + ":" + String(amountTK) + ":999:999:");
+          sendtoSlave("Cancel Init:" + choice + ":" + String(popularAmountsTK[dispenserIndex-1][amountIndex]) + ":999:999:");
           state = 99;
         }
         break;
@@ -851,6 +862,7 @@ void handleStateChange(int dispenserIndex, String choice, int btnIndex, int amou
         case GREEN_BTN:
         {
           state = 1;
+          int amountTK = popularAmountsTK[dispenserIndex-1][amountIndex];
           int amountML = ceil(getVolume(dispenserIndex, amountTK));
           sendtoDisplay("N:" + String(amountTK) + ":" + String(amountML) + ":");
         }
